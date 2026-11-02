@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form Permintaan Data</title>
+<style>
+:root{--bg:#f1f4f9;--card:#fff;--line:#e3e8f0;--field:#f7f9fc;--ink:#111827;--mute:#6b7280;--accent:#4f46e5;--ok:#059669;--err:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.4 system-ui,"Segoe UI",Roboto,sans-serif;padding:20px}
+.wrap{max-width:900px;margin:0 auto;display:grid;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.top b{font-size:14px}
+h1{margin:0;font-size:20px;font-weight:700}
+h2{margin:0 0 14px;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+label.l{display:block;margin:12px 0 5px;font-weight:500;color:#374151}
+label.l:first-of-type{margin-top:0}
+.req::after{content:" *";color:var(--err)}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--field);font:inherit;color:var(--ink)}
+textarea{resize:vertical;min-height:110px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;background:#fff}
+.row{display:flex;gap:8px}
+.btn{border:1px solid var(--line);background:var(--field);border-radius:10px;padding:9px 14px;font:inherit;cursor:pointer;white-space:nowrap}
+.btn:focus-visible{outline:2px solid var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{display:flex;align-items:center;gap:6px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--field);cursor:pointer}
+.chips input{width:auto;margin:0}
+.chips label:has(input:checked){background:#eef2ff;border-color:var(--accent);color:var(--accent);font-weight:500}
+.drop{display:flex;flex-direction:column;align-items:center;gap:4px;padding:22px;border:1.5px dashed #cbd5e1;border-radius:12px;background:var(--field);cursor:pointer;text-align:center}
+.drop.over{border-color:var(--accent);background:#eef2ff}
+.files{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.files li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 11px;border:1px solid var(--line);border-radius:10px;background:var(--field)}
+.files button{border:0;background:none;color:var(--err);cursor:pointer;font:inherit}
+.hint{color:var(--mute);font-size:11.5px;margin-top:5px}
+.count{float:right;color:var(--mute);font:11px ui-monospace,Consolas,monospace}
+.submit{display:flex;justify-content:flex-end;align-items:center;gap:14px}
+.primary{background:var(--accent);color:#fff;border:0;padding:11px 22px;border-radius:10px;font:600 13px inherit;font-family:inherit;cursor:pointer}
+.primary:disabled{opacity:.6;cursor:wait}
+#msg{margin-right:auto;font-weight:500}
+.ok{color:var(--ok)}.bad{color:var(--err)}
+</style>
+</head>
+<body>
+<form id="f" class="wrap" novalidate>
+
+  <h1>Form Permintaan Data</h1>
+
+  <div class="card top">
+    <b>Tanggal Permintaan <span style="color:var(--err)">*</span></b>
+    <div class="row">
+      <input type="date" id="tanggal" name="tanggal" required style="width:170px">
+      <button type="button" class="btn" id="today">Hari Ini</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Pemohon</h2>
+      <label class="l req" for="pemohon">Employees Request</label>
+      <input id="pemohon" name="pemohon" list="karyawan" placeholder="Ketik nama karyawan…" autocomplete="off" required>
+      <datalist id="karyawan">
+        <option value="Nama Karyawan 1"><option value="Nama Karyawan 2"><option value="Nama Karyawan 3">
+      </datalist>
+
+      <label class="l req" for="region">Region</label>
+      <select id="region" name="region" required>
+        <option value="">-- Pilih Region --</option>
+        <option>Region 1</option><option>Region 2</option><option>Region 3</option>
+      </select>
+      <div class="hint">Ganti daftar region sesuai wilayah kerja.</div>
+    </div>
+
+    <div class="card">
+      <h2>Permintaan</h2>
+      <label class="l req" for="permintaan">Permintaan Data</label>
+      <select id="permintaan" name="permintaan" required>
+        <option value="">-- Pilih Permintaan Data --</option>
+        <option>Peta</option><option>SHP</option><option>DWG</option><option>KML/KMZ</option><option>Other</option>
+      </select>
+
+      <div id="jenisWrap" hidden>
+        <label class="l req" for="jenisPeta">Jenis Peta</label>
+        <select id="jenisPeta" name="jenisPeta">
+          <option value="">-- Pilih Jenis Peta --</option>
+          <option>Peta Internal Request (Tim LA)</option>
+          <option>Peta Halomaps/PDFmaps</option>
+          <option>Peta Screenshot/Foto</option>
+          <option>Peta Besar (Pengajuan Pembayaran Lahan)</option>
+          <option>Peta Bidang (Lampiran Dokumen Pembayaran Lahan)</option>
+          <option>Peta Permohonan Dana Pembayaran Lahan</option>
+          <option>Peta Tukar Guling Lahan</option>
+          <option>Peta Ganti Rugi Bangunan (Relokasi)</option>
+        </select>
+      </div>
+
+      <div id="otherWrap" hidden>
+        <label class="l req" for="otherText">Permintaan data lainnya</label>
+        <input id="otherText" name="otherText" placeholder="Ketik permintaan data…">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Keperluan</h2>
+    <label class="l req" for="keperluan">Keperluan <span class="count" id="cnt">0 karakter</span></label>
+    <textarea id="keperluan" name="keperluan" placeholder="Jelaskan untuk apa peta dipakai, area/lokasi yang dibutuhkan, skala, dan batas waktu…" required></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Dokumentasi</h2>
+    <label class="drop" for="docs">
+      <b>Pilih file atau seret ke sini</b>
+      <span class="hint">Foto/PDF • maks. 5 file • maks. 5 MB per file • opsional</span>
+    </label>
+    <input type="file" id="docs" accept="image/*,.pdf" multiple hidden>
+    <ul id="fileList" class="files"></ul>
+  </div>
+
+  <div class="submit">
+    <span id="msg" role="status"></span>
+    <button class="primary" id="send" type="submit">Kirim Permintaan</button>
+  </div>
+</form>
+
+<script>
+// Ganti dengan URL Web App dari Apps Script (Deploy > Web app)
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHW_6SCdGyhd4Ds_qnUZY8xGbc48-5tJUi5RJexBzznYJjFwDDDiIw6SRQIUJNxY2D/exec";
+const MAX_FILES = 5, MAX_MB = 5;
+
+const $ = id => document.getElementById(id);
+const f = $("f"), msg = $("msg"), btn = $("send");
+const iso = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+function say(t, ok){ msg.textContent = t; msg.className = ok ? "ok" : "bad"; }
+
+$("tanggal").value = iso();
+$("today").onclick = () => $("tanggal").value = iso();
+$("keperluan").oninput = e => $("cnt").textContent = e.target.value.length + " karakter";
+
+// Permintaan Data: Peta -> pilih jenis peta, Other -> ketik sendiri
+function toggleSub(){
+  const v = $("permintaan").value;
+  $("jenisWrap").hidden = v !== "Peta";
+  $("otherWrap").hidden = v !== "Other";
+}
+$("permintaan").onchange = toggleSub;
+
+// Daftar karyawan, region, dan jenis peta diambil dari spreadsheet (tab "Karyawan" & "Opsi").
+// Kalau gagal diambil, daftar bawaan di HTML tetap dipakai.
+const esc = t => String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const fillSelect = (sel, list, ph) => { sel.innerHTML = `<option value="">${ph}</option>` + list.map(v => `<option>${esc(v)}</option>`).join(""); };
+fetch(APPS_SCRIPT_URL + "?action=config").then(r => r.json()).then(c => {
+  if (c.karyawan && c.karyawan.length) $("karyawan").innerHTML = c.karyawan.map(n => `<option value="${esc(n)}">`).join("");
+  if (c.region && c.region.length) fillSelect($("region"), c.region, "-- Pilih Region --");
+  if (c.jenisPeta && c.jenisPeta.length) fillSelect($("jenisPeta"), c.jenisPeta, "-- Pilih Jenis Peta --");
+}).catch(() => {});
+
+// Dokumentasi
+let files = [];
+function addFiles(list){
+  for (const file of list) {
+    if (files.length >= MAX_FILES) { say("Maksimal " + MAX_FILES + " file.", false); break; }
+    if (file.size > MAX_MB * 1048576) { say(file.name + " lebih dari " + MAX_MB + " MB.", false); continue; }
+    files.push(file);
+  }
+  renderFiles();
+}
+function renderFiles(){
+  $("fileList").innerHTML = "";
+  files.forEach((file, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = "<span></span><button type='button'>Hapus</button>";
+    li.firstChild.textContent = file.name + " (" + (file.size/1048576).toFixed(1) + " MB)";
+    li.lastChild.onclick = () => { files.splice(i,1); renderFiles(); };
+    $("fileList").appendChild(li);
+  });
+}
+$("docs").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
+const drop = document.querySelector(".drop");
+["dragover","dragenter"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+const toB64 = file => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(file); });
+const checked = name => [...f.querySelectorAll(`input[name=${name}]:checked`)].map(i => i.value);
+
+f.addEventListener("submit", async e => {
+  e.preventDefault();
+  const p = $("permintaan").value, jenis = $("jenisPeta").value, other = $("otherText").value.trim();
+  const permintaanData = p === "Peta" ? "Peta - " + jenis : p === "Other" ? "Other: " + other : p;
+  const data = {
+    tanggal: $("tanggal").value,
+    pemohon: $("pemohon").value.trim(),
+    region: $("region").value,
+    permintaanData,
+    keperluan: $("keperluan").value.trim()
+  };
+  const missing = Object.entries({"Tanggal Permintaan":data.tanggal,"Employees Request":data.pemohon,Region:data.region,"Permintaan Data":p,Keperluan:data.keperluan}).filter(([,v]) => !v).map(([k]) => k);
+  if (p === "Peta" && !jenis) missing.push("Jenis Peta");
+  if (p === "Other" && !other) missing.push("Isian Other");
+  if (missing.length) return say("Lengkapi dulu: " + missing.join(", "), false);
+
+  btn.disabled = true; say("Mengirim…", true);
+  try {
+    data.files = await Promise.all(files.map(async file => ({ name:file.name, type:file.type, data:await toB64(file) })));
+    // text/plain + no-cors supaya tidak kena preflight CORS di Apps Script
+    await fetch(APPS_SCRIPT_URL, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(data) });
+    say("Permintaan terkirim. Tim peta akan segera menerima notifikasi.", true);
+    f.reset(); files = []; renderFiles(); toggleSub();
+    $("tanggal").value = iso(); $("cnt").textContent = "0 karakter";
+  } catch (err) {
+    say("Gagal mengirim. Cek koneksi lalu coba lagi.", false);
+  } finally { btn.disabled = false; }
+});
+</script>
+</body>
+</html>

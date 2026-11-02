@@ -34,6 +34,20 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .files{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
 .files li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 11px;border:1px solid var(--line);border-radius:10px;background:var(--field)}
 .files button{border:0;background:none;color:var(--err);cursor:pointer;font:inherit}
+.ms{position:relative}
+.ms-box{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:10px;background:var(--field);cursor:text}
+.ms-box:focus-within{outline:2px solid var(--accent);outline-offset:1px;background:#fff}
+.ms-box input{flex:1;min-width:130px;width:auto;border:0;background:transparent;padding:4px}
+.ms-box input:focus{outline:none;background:transparent}
+#msChips{display:contents}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 10px;border-radius:999px;background:#eef2ff;color:var(--accent);font-weight:500}
+.chip button{border:0;background:none;color:inherit;cursor:pointer;font-size:15px;line-height:1;padding:0 4px}
+.ms-list{position:absolute;z-index:20;left:0;right:0;top:calc(100% + 4px);max-height:220px;overflow:auto;margin:0;padding:4px;list-style:none;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.12)}
+.ms-list li{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;cursor:pointer}
+.ms-list li:hover,.ms-list li.act{background:var(--field)}
+.ms-list li .ck{width:16px;height:16px;border:1.5px solid #cbd5e1;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex:none}
+.ms-list li[aria-selected=true] .ck{background:var(--accent);border-color:var(--accent)}
+.ms-list li.none{color:var(--mute);cursor:default}
 .hint{color:var(--mute);font-size:11.5px;margin-top:5px}
 .count{float:right;color:var(--mute);font:11px ui-monospace,Consolas,monospace}
 .submit{display:flex;justify-content:flex-end;align-items:center;gap:14px}
@@ -59,11 +73,15 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
   <div class="grid">
     <div class="card">
       <h2>Pemohon</h2>
-      <label class="l req" for="pemohon">Employees Request</label>
-      <input id="pemohon" name="pemohon" list="karyawan" placeholder="Ketik nama karyawan…" autocomplete="off" required>
-      <datalist id="karyawan">
-        <option value="Nama Karyawan 1"><option value="Nama Karyawan 2"><option value="Nama Karyawan 3">
-      </datalist>
+      <label class="l req" for="empSearch">Employees Request</label>
+      <div class="ms" id="ms">
+        <div class="ms-box" id="msBox">
+          <span id="msChips"></span>
+          <input id="empSearch" placeholder="Pilih / ketik nama karyawan…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="msList">
+        </div>
+        <ul class="ms-list" id="msList" role="listbox" aria-multiselectable="true" hidden></ul>
+      </div>
+      <div class="hint">Bisa pilih lebih dari satu nama.</div>
 
       <label class="l req" for="region">Region</label>
       <select id="region" name="region" required>
@@ -139,6 +157,51 @@ $("tanggal").value = iso();
 $("today").onclick = () => $("tanggal").value = iso();
 $("keperluan").oninput = e => $("cnt").textContent = e.target.value.length + " karakter";
 
+// Employees Request: dropdown multi-pilih + pencarian
+let employees = ["Nama Karyawan 1", "Nama Karyawan 2", "Nama Karyawan 3"];
+let selected = [], activeIdx = -1;
+const empSearch = $("empSearch"), msList = $("msList");
+const filtered = () => employees.filter(n => n.toLowerCase().includes(empSearch.value.trim().toLowerCase()));
+function toggleEmp(n){
+  selected = selected.includes(n) ? selected.filter(x => x !== n) : [...selected, n];
+  empSearch.value = ""; renderEmp(); empSearch.focus();
+}
+function renderEmp(){
+  $("msChips").innerHTML = "";
+  selected.forEach(n => {
+    const c = document.createElement("span"); c.className = "chip"; c.textContent = n;
+    const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label", "Hapus " + n);
+    x.onclick = e => { e.stopPropagation(); toggleEmp(n); };
+    c.appendChild(x); $("msChips").appendChild(c);
+  });
+  const list = filtered();
+  msList.innerHTML = "";
+  if (!list.length) msList.innerHTML = '<li class="none">Nama tidak ditemukan</li>';
+  list.forEach((n, i) => {
+    const li = document.createElement("li");
+    li.setAttribute("role", "option"); li.setAttribute("aria-selected", selected.includes(n));
+    if (i === activeIdx) li.className = "act";
+    li.innerHTML = '<span class="ck">' + (selected.includes(n) ? "✓" : "") + '</span><span></span>';
+    li.lastChild.textContent = n;
+    li.onmousedown = e => { e.preventDefault(); toggleEmp(n); };
+    msList.appendChild(li);
+  });
+}
+const openEmp = o => { msList.hidden = !o; empSearch.setAttribute("aria-expanded", o); };
+$("msBox").onclick = () => { empSearch.focus(); openEmp(true); };
+empSearch.onfocus = () => { renderEmp(); openEmp(true); };
+empSearch.oninput = () => { activeIdx = 0; renderEmp(); openEmp(true); };
+empSearch.onblur = () => { empSearch.value = ""; activeIdx = -1; renderEmp(); openEmp(false); };
+empSearch.onkeydown = e => {
+  const list = filtered();
+  if (e.key === "ArrowDown") { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, list.length - 1); renderEmp(); openEmp(true); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); renderEmp(); }
+  else if (e.key === "Enter") { e.preventDefault(); if (list[Math.max(activeIdx, 0)]) toggleEmp(list[Math.max(activeIdx, 0)]); }
+  else if (e.key === "Escape") openEmp(false);
+  else if (e.key === "Backspace" && !empSearch.value && selected.length) toggleEmp(selected[selected.length - 1]);
+};
+renderEmp();
+
 // Permintaan Data: Peta -> pilih jenis peta, Other -> ketik sendiri
 function toggleSub(){
   const v = $("permintaan").value;
@@ -152,7 +215,7 @@ $("permintaan").onchange = toggleSub;
 const esc = t => String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 const fillSelect = (sel, list, ph) => { sel.innerHTML = `<option value="">${ph}</option>` + list.map(v => `<option>${esc(v)}</option>`).join(""); };
 fetch(APPS_SCRIPT_URL + "?action=config").then(r => r.json()).then(c => {
-  if (c.karyawan && c.karyawan.length) $("karyawan").innerHTML = c.karyawan.map(n => `<option value="${esc(n)}">`).join("");
+  if (c.karyawan && c.karyawan.length) { employees = c.karyawan; renderEmp(); }
   if (c.region && c.region.length) fillSelect($("region"), c.region, "-- Pilih Region --");
   if (c.jenisPeta && c.jenisPeta.length) fillSelect($("jenisPeta"), c.jenisPeta, "-- Pilih Jenis Peta --");
 }).catch(() => {});
@@ -192,7 +255,7 @@ f.addEventListener("submit", async e => {
   const permintaanData = p === "Peta" ? "Peta - " + jenis : p === "Other" ? "Other: " + other : p;
   const data = {
     tanggal: $("tanggal").value,
-    pemohon: $("pemohon").value.trim(),
+    pemohon: selected.join(", "),
     region: $("region").value,
     permintaanData,
     keperluan: $("keperluan").value.trim()
@@ -208,7 +271,7 @@ f.addEventListener("submit", async e => {
     // text/plain + no-cors supaya tidak kena preflight CORS di Apps Script
     await fetch(APPS_SCRIPT_URL, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(data) });
     say("Permintaan terkirim. Tim peta akan segera menerima notifikasi.", true);
-    f.reset(); files = []; renderFiles(); toggleSub();
+    f.reset(); selected = []; renderEmp(); files = []; renderFiles(); toggleSub();
     $("tanggal").value = iso(); $("cnt").textContent = "0 karakter";
   } catch (err) {
     say("Gagal mengirim. Cek koneksi lalu coba lagi.", false);

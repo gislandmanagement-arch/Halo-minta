@@ -48,6 +48,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .ms-list li .ck{width:16px;height:16px;border:1.5px solid #cbd5e1;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex:none}
 .ms-list li[aria-selected=true] .ck{background:var(--accent);border-color:var(--accent)}
 .ms-list li.none{color:var(--mute);cursor:default}
+.agree{display:flex;gap:12px;align-items:flex-start;cursor:pointer;line-height:1.55}
+.agree input{width:18px;height:18px;margin-top:2px;flex:none;accent-color:var(--accent)}
 .hint{color:var(--mute);font-size:11.5px;margin-top:5px}
 .count{float:right;color:var(--mute);font:11px ui-monospace,Consolas,monospace}
 .submit{display:flex;justify-content:flex-end;align-items:center;gap:14px}
@@ -88,7 +90,6 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
         <option value="">-- Pilih Region --</option>
         <option>Region 1</option><option>Region 2</option><option>Region 3</option>
       </select>
-      <div class="hint">Ganti daftar region sesuai wilayah kerja.</div>
     </div>
 
     <div class="card">
@@ -122,20 +123,26 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
   </div>
 
   <div class="card">
-    <h2>Keperluan</h2>
-    <label class="l req" for="keperluan">Keperluan <span class="count" id="cnt">0 karakter</span></label>
-    <textarea id="keperluan" name="keperluan" placeholder="Jelaskan untuk apa peta dipakai, area/lokasi yang dibutuhkan, skala, dan batas waktu…" required></textarea>
+    <h2>Keperluan/Kebutuhan</h2>
+    <label class="l req" for="keperluan">Keperluan/Kebutuhan <span class="count" id="cnt">0 karakter</span></label>
+    <textarea id="keperluan" name="keperluan" placeholder="Jelaskan keperluan dan kebutuhan peta secara singkat." required></textarea>
   </div>
 
   <div class="card">
-    <h2>Dokumentasi</h2>
+    <h2>Dokumentasi (Jika Ada)</h2>
+    <div class="hint" style="margin:-8px 0 10px">Jika tidak ada, lewati bagian ini.</div>
     <label class="drop" for="docs">
       <b>Pilih file atau seret ke sini</b>
-      <span class="hint">Foto/PDF • maks. 5 file • maks. 5 MB per file • opsional</span>
+      <span class="hint">Foto/PDF • maks. 5 file • maks. 5 MB per file</span>
     </label>
     <input type="file" id="docs" accept="image/*,.pdf" multiple hidden>
     <ul id="fileList" class="files"></ul>
   </div>
+
+  <label class="card agree" for="agree">
+    <input type="checkbox" id="agree">
+    <span>Saya menyatakan bahwa data yang saya ajukan memang sesuai dengan kebutuhan saya. Saya bertanggung jawab atas penggunaan dan pengelolaan data tersebut serta memastikan penggunaannya sesuai dengan tujuan permintaan yang telah disampaikan.</span>
+  </label>
 
   <div class="submit">
     <span id="msg" role="status"></span>
@@ -260,7 +267,8 @@ f.addEventListener("submit", async e => {
     permintaanData,
     keperluan: $("keperluan").value.trim()
   };
-  const missing = Object.entries({"Tanggal Permintaan":data.tanggal,"Employees Request":data.pemohon,Region:data.region,"Permintaan Data":p,Keperluan:data.keperluan}).filter(([,v]) => !v).map(([k]) => k);
+  const missing = Object.entries({"Tanggal Permintaan":data.tanggal,"Employees Request":data.pemohon,Region:data.region,"Permintaan Data":p,"Keperluan/Kebutuhan":data.keperluan}).filter(([,v]) => !v).map(([k]) => k);
+  if (!$("agree").checked) missing.push("Centang pernyataan persetujuan");
   if (p === "Peta" && !jenis) missing.push("Jenis Peta");
   if (p === "Other" && !other) missing.push("Isian Other");
   if (missing.length) return say("Lengkapi dulu: " + missing.join(", "), false);
@@ -270,7 +278,7 @@ f.addEventListener("submit", async e => {
     data.files = await Promise.all(files.map(async file => ({ name:file.name, type:file.type, data:await toB64(file) })));
     // text/plain + no-cors supaya tidak kena preflight CORS di Apps Script
     await fetch(APPS_SCRIPT_URL, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(data) });
-    say("Permintaan terkirim. Tim peta akan segera menerima notifikasi.", true);
+    say("Permintaan terkirim. Tim GnR akan segera menerima notifikasi.", true);
     f.reset(); selected = []; renderEmp(); files = []; renderFiles(); toggleSub();
     $("tanggal").value = iso(); $("cnt").textContent = "0 karakter";
   } catch (err) {
